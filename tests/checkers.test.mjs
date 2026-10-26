@@ -77,7 +77,7 @@ test('Starvios discovery: idle NO es live aunque tenga started_at y playback_id'
   assert.deepEqual(parseStarviosDiscovery(data, 'cr0ss'), { live: false, title: '', sessionId: '' });
 });
 
-test('Starvios discovery: estado live usa id de emisión y título', async () => {
+test('Starvios discovery: estado live usa título pero no confía en stream.id como ID de sesión', async () => {
   const response = { channel: { id: 'canal1', username: 'cr0ss' },
     stream: { id: 'live-nueva-emision', channel_id: 'canal1', status: 'live',
       title: '¡EN DIRECTO!', profiles: { username: 'cr0ss' } } };
@@ -90,7 +90,7 @@ test('Starvios discovery: estado live usa id de emisión y título', async () =>
     return json(response);
   });
   assert.equal(r[0].live, true);
-  assert.equal(r[0].sessionId, 'live-nueva-emision');
+  assert.equal(r[0].sessionId, '');
   assert.equal(r[0].title, '¡EN DIRECTO!');
   assert.equal(r[0].url, 'https://starvios.com/live/cr0ss');
 });
@@ -148,5 +148,5 @@ test('Starvios: endpoint público predeterminado y usuario dinámico para CUALQU
   });
   assert.deepEqual(requests, ['cr0ss','horuswrld','arisa']);
   assert.deepEqual(r.map(x=>x.live), [false,true,false]);
-  assert.equal(r[1].sessionId, 'live-horuswrld');
+  assert.equal(r[1].sessionId, '');
 });

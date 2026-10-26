@@ -50,3 +50,15 @@ test('estados no comprobados no alteran detección anterior', async () => {
   assert.equal((await processPresence(store, item(true), x => sent.push(x))).action, 'already-announced');
   assert.equal(sent.length, 1);
 });
+
+
+test('migra estado antiguo de Starvios con stream.id persistente y permite una alerta', async () => {
+  const store = makeStore(), sent = [];
+  await store.setJSON('status/starvios/cr0ss', {
+    live: true, sessionKey: 'id:stream-objeto-persistente', notifiedAt: '2026-10-26T10:00:00.000Z'
+  });
+  const starvios = { platform: 'starvios', user: 'cr0ss', live: true, sessionId: '', url: 'https://starvios.com/live/cr0ss' };
+  assert.equal((await processPresence(store, starvios, x => sent.push(x))).action, 'sent');
+  assert.equal((await processPresence(store, starvios, x => sent.push(x))).action, 'already-announced');
+  assert.equal(sent.length, 1);
+});

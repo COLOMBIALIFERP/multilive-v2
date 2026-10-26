@@ -1,0 +1,39 @@
+MULTILIVE v2.0.5 — CORRECCIÓN DE AVISOS AUTOMÁTICOS STARVIOS
+
+DIAGNÓSTICO
+Los logs mostraron: [starvios] @cr0ss: duplicate-skipped después de un
+registro offline-unchanged. La prueba del webhook funciona, por lo que la ruta
+de envío sí puede publicar en Discord. La causa probable estaba en usar
+stream.id como sessionId: ese ID puede mantenerse entre cambios de estado y
+colisionar con una marca announced guardada de una emisión anterior.
+
+CORRECCIÓN
+- Starvios solo se considera LIVE si stream.status es exactamente "live".
+- stream.id ya no se usa como ID único de sesión para Starvios.
+- La deduplicación utiliza el período offline previo, para que una nueva emisión
+  tras un estado offline confirmado pueda generar una alerta nueva.
+- No se modifican webhook, tokens, listas de canales, comandos ni otras plataformas.
+- Se actualizó la migración de estado en lib/state.mjs: si existe el estado antiguo
+  `id:stream.id`, permite una sola alerta de recuperación y adopta el esquema nuevo.
+- Se actualizaron las pruebas para verificar el ID no persistente y la migración.
+
+IMPLEMENTACIÓN
+Reemplaza en el repositorio conectado a Netlify estos dos archivos por las
+versiones de esta actualización:
+- lib/checkers.mjs
+- lib/state.mjs
+Haz commit en la rama conectada a producción y espera a que Netlify termine.
+Las carpetas tests/ contienen pruebas de regresión para desarrollo local; no es
+necesario desplegarlas para que la función opere.
+
+DESPUÉS DEL DEPLOY
+1. Espera a que el deploy de producción finalice como Published.
+2. Confirma que check-lives siga en Scheduled.
+3. Haz una comprobación con una cuenta Starvios que esté realmente LIVE.
+4. En Logs, busca [starvios] @usuario: sent. Si ves error, comparte el mensaje
+   completo sin revelar variables secretas.
+
+IMPORTANTE
+La comprobación programada corre cada 10 minutos; una alerta puede tardar hasta
+la siguiente ejecución programada. Esta corrección no puede enviar una alerta de
+una transmisión que el endpoint no reporte con status="live".
