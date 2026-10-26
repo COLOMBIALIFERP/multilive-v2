@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Notificador LIVE · Discord</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, Arial, sans-serif; }
+    body { margin: 0; background: #0f111b; color: #f7f7fb; min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+    .wrap { max-width: 720px; width: 100%; }
+    .pill { display: inline-block; border: 1px solid #43485c; border-radius: 28px; padding: 8px 13px; font-size: 12px; color: #aeb8d1; }
+    h1 { font-size: clamp(30px,5vw,48px); margin: 18px 0; }
+    p { color: #b2b8ca; line-height: 1.7; }
+    .cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 24px 0; }
+    .cards > div { padding: 18px 10px; text-align: center; background: #1d2031; border: 1px solid #30364b; border-radius: 14px; font-weight: 700; }
+    .cards > div:nth-child(1) { color: #ef6bed; }
+    .cards > div:nth-child(2) { color: #53fc18; }
+    .cards > div:nth-child(3) { color: #68e1e9; }
+    .cards > div:nth-child(4) { color: #ffbc60; }
+    .panel { border: 1px solid #30364b; border-radius: 18px; padding: 22px; background: #181a27; margin: 18px 0; }
+    strong { color: #fff; } code { color: #95c5ff; } label { display: block; margin: 12px 0 7px; font-weight: 600; font-size: 14px; }
+    input { font: inherit; border: 1px solid #43485c; background: #0f111b; color: #fff; border-radius: 10px; padding: 11px 12px; width: 100%; box-sizing: border-box; }
+    button { font: inherit; margin-top: 12px; background: #5865f2; color: #fff; border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: default; }
+    .result { min-height: 22px; font-size: 14px; }
+    small { color: #9fa7bc; }
+    @media(max-width:500px) { .cards { grid-template-columns: repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <span class="pill">🔴 Alertas de stream · Discord</span>
+  <h1>Tu comunidad se entera cuando entras en directo.</h1>
+  <p>Sistema alojado en Netlify. Recibe comandos /stream desde Discord mediante interacciones seguras; no necesita una computadora encendida ni mantiene una conexión permanente.</p>
+  <div class="cards"><div>TWITCH</div><div>KICK</div><div>TIKTOK</div><div>STARVIOS</div></div>
+  <section class="panel">
+    <strong>Administración del servicio</strong>
+    <p>Las cuentas se agregan, consultan y eliminan <strong>directamente desde Discord</strong> mediante <code>/stream</code>. Las claves privadas se configuran una sola vez en Netlify. Esta página no muestra contraseñas ni tokens.</p>
+    <p>Comandos: <code>/stream agregar</code>, <code>/stream eliminar</code>, <code>/stream lista</code>, <code>/stream directos</code> y <code>/stream revisar</code>. Consulta el README para instalarlo.</p>
+  </section>
+  <section class="panel">
+    <strong>Instalar comandos /stream en tu Discord (una sola vez)</strong>
+    <p>Tras configurar <code>DISCORD_APPLICATION_ID</code>, <code>DISCORD_PUBLIC_KEY</code>, <code>DISCORD_GUILD_ID</code> y <code>DISCORD_BOT_TOKEN</code> en Netlify, pega aquí tu clave <code>TEST_SECRET</code> para registrar el comando en tu servidor. Primero debes guardar la URL de interacciones en el Portal de Discord.</p>
+    <form id="install-form" autocomplete="off">
+      <label for="install-secret">Tu clave TEST_SECRET</label>
+      <input type="password" id="install-secret" required minlength="20" placeholder="Clave de administración" autocomplete="off">
+      <button type="submit" id="install-button">Instalar comandos de Discord</button>
+    </form>
+    <p id="install-result" class="result" role="status" aria-live="polite"></p>
+    <small>Solo se envía tu clave al endpoint protegido de este mismo sitio. No introduzcas aquí el token del bot ni la URL del webhook.</small>
+  </section>
+  <section class="panel">
+    <strong>Prueba una notificación en tu Discord</strong>
+    <p>Solo funciona después de crear las variables <code>DISCORD_WEBHOOK_URL</code> y <code>TEST_SECRET</code> en Netlify.</p>
+    <form id="test-form" autocomplete="off">
+      <label for="test-secret">Tu clave TEST_SECRET</label>
+      <input type="password" id="test-secret" required minlength="20" placeholder="Tu clave privada de prueba" autocomplete="off">
+      <button id="test-button" type="submit">Enviar alerta de prueba</button>
+    </form>
+    <p id="test-result" class="result" role="status" aria-live="polite"></p>
+    <small>La clave no se almacena en el navegador ni se envía a ningún dominio externo: únicamente a la función protegida de este sitio. No escribas aquí el token del bot ni el webhook de Discord.</small>
+  </section>
+</main>
+<script>
+  const installForm = document.getElementById('install-form');
+  installForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const key = document.getElementById('install-secret');
+    const result = document.getElementById('install-result');
+    const btn = document.getElementById('install-button');
+    const secret = key.value; key.value = ''; btn.disabled = true;
+    result.textContent = 'Registrando comando en Discord…';
+    try {
+      const response = await fetch('/.netlify/functions/install-commands', {
+        method: 'POST', headers: { Authorization: `Bearer ${secret}` }
+      });
+      const data = await response.json().catch(() => ({}));
+      result.textContent = data.message || data.error || `Error ${response.status}`;
+    } catch { result.textContent = 'No fue posible conectar con Netlify.'; }
+    finally { btn.disabled = false; }
+  });
+  const form = document.getElementById('test-form');
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const result = document.getElementById('test-result');
+    const button = document.getElementById('test-button');
+    const secretInput = document.getElementById('test-secret');
+    const secret = secretInput.value;
+    secretInput.value = '';
+    button.disabled = true;
+    result.textContent = 'Enviando prueba…';
+    try {
+      const res = await fetch('/.netlify/functions/test-alert', {
+        method: 'POST', headers: { Authorization: `Bearer ${secret}` }
+      });
+      result.textContent = res.ok ? '✅ Prueba enviada. Revisa el canal de Discord.' : `❌ Error ${res.status}: revisa TEST_SECRET y DISCORD_WEBHOOK_URL.`;
+    } catch {
+      result.textContent = '❌ No se pudo conectar con la función de Netlify.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

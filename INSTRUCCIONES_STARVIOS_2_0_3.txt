@@ -1,0 +1,53 @@
+MULTILIVE v2.0.3 — CORRECCIÓN STARVIOS (26 de octubre de 2026)
+========================================================
+
+DESCUBRIMIENTO
+El usuario capturó la respuesta a discovery?kind=channel&username=cr0ss:
+- channel.username = cr0ss
+- stream.status = idle (NO está en directo)
+- started_at estaba presente, pero NO confirma que el directo esté activo.
+En la respuesta live-now aparecen otros canales con status=live, incluido
+"crosss" (con tres s), pero NO "cr0ss" (con cero). Son cuentas diferentes.
+
+QUÉ CAMBIÓ
+- lib/checkers.mjs: nuevo adaptador JSON con verificación exacta del usuario.
+- Emisión LIVE solo cuando status='live'; usa stream.id para antidupl.
+- status='idle' -> offline sin alerta; estado dudoso -> error, nunca offline.
+- No envía mensajes sobre directos viejos basados solo en started_at.
+- Soporta URL de discovery obtenida de la pestaña Network de Chrome.
+- Mantiene detección TikTok v2.0.2, Discord y demás plataformas intactas.
+
+CONFIGURACIÓN OBLIGATORIA PARA ACTIVAR EL NUEVO DETECTOR
+1. Abre https://starvios.com/live/cr0ss en Chrome y pulsa F12.
+2. Network (Red) -> Fetch/XHR -> recargar -> clic en petición "discovery?kind=channel&username=cr0ss".
+3. Abre Headers -> General -> Request URL. Copia la URL COMPLETA. Debe ser
+   HTTPS y terminar en /discovery?kind=channel&username=cr0ss. Puede estar en
+   otro dominio distinto de starvios.com (por ejemplo, backend público).
+4. NO compartas ni pegues claves, cookies, Authorization o tokens de sesión.
+5. En el MISMO proyecto Netlify -> Environment variables, crea
+   STARVIOS_DISCOVERY_URL = [la URL completa, si no contiene secretos].
+   No hace falta editar el parámetro username para otras cuentas.
+6. Solo si tienes una CLAVE PÚBLICA AUTORIZADA de acceso al endpoint,
+   puedes configurar STARVIOS_PUBLIC_API_KEY como variable secreta.
+   NO uses JWT de sesión personal, cookies ni claves privadas de Starvios.
+   Si el endpoint exige sesión privada, detén la integración y solicita
+   una vía de acceso autorizada. El bot no evita restricciones de acceso.
+7. Sustituye lib/checkers.mjs en el repositorio de GitHub conectado a Netlify.
+   No agregues carpetas extra ni subas el ZIP a GitHub como archivo.
+8. Comprueba que Netlify termine el despliegue correctamente.
+9. En Discord usa /stream lista y después /stream revisar. Respetar 90s de
+   espera entre revisiones.
+10. Si el canal permanece idle, resultado normal: 0 directos y 0 errores.
+    Para confirmar el envío de una alerta hace falta comprobar un canal
+    que realmente esté en vivo en el momento de /stream revisar.
+
+NOTA IMPORTANTE
+El JSON suministrado demuestra la estructura de los datos, pero NO contiene
+la dirección completa del endpoint ni sus requisitos de autenticación.
+La integración se ha probado con respuestas simuladas locales, NO desde
+Starvios en vivo. Si falla HTTP 401/403/404 es un problema de acceso o ruta,
+no una prueba de que el canal esté desconectado.
+
+SI YA USAS MULTILIVE
+No borres cuentas, tokens, Netlify Blobs, variables Discord ni webhooks.
+No hace falta volver a instalar comandos slash ni crear un nuevo bot.

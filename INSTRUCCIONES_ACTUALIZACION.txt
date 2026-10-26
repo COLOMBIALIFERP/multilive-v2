@@ -1,0 +1,52 @@
+MULTILIVE v2.0.2 — CORRECCIÓN DE DETECTOR TIKTOK (26/10/2026)
+===========================================================
+
+ERROR QUE CORRIGE
+TikTok/@djcr0ss_ - Cannot read properties of undefined (reading 'processInitialData')
+
+CAUSA CONFIRMADA EN EL CÓDIGO DE LA DEPENDENCIA
+La versión tiktok-live-connector 2.5.0 lee options.processInitialData dentro
+su constructor; la versión anterior de MultiLIVE le pasaba solo el usuario.
+Al recibir options=undefined, falla ANTES de consultar TikTok.
+
+CAMBIOS
+- lib/checkers.mjs: crea TikTokLiveConnection(user, {processInitialData:false}).
+  No abre WebSocket; únicamente invoca fetchIsLive().
+- lib/checkers.mjs: el temporizador de consulta ahora es realmente 12 segundos
+  (antes decía 12 pero estaba configurado en 8).
+- tests/checkers.test.mjs: prueba de regresión para evitar volver a omitir
+  el objeto de opciones del constructor.
+- package.json y README.md: identificador de versión 2.0.2.
+
+PUBLICACIÓN EN GITHUB Y NETLIFY
+1. Descomprime este ZIP y abre la carpeta multilive-v2-main.
+2. En el repositorio de GitHub CONECTADO al sitio Netlify existente,
+   identifica dónde se encuentra lib/checkers.mjs actualmente.
+3. Para una actualización rápida basta con REEMPLAZAR únicamente
+   ese archivo por el lib/checkers.mjs de este ZIP. No crees una carpeta
+   multilive-v2-main dentro de la carpeta base ya existente.
+4. Si prefieres publicar todos los archivos, actualiza su contenido
+   respetando las rutas lib/, netlify/, public/ y tests/ y sin añadir
+   carpetas extra. En cualquier caso NO subas el .zip comprimido a GitHub.
+5. Confirma el commit. En Netlify > Deploys, comprueba que el despliegue
+   se haya completado sin errores y use ese commit.
+6. NO cambies las variables de entorno, el webhook, el bot, los permisos,
+   ni la URL de interacciones. NO ejecutes Instalar comandos otra vez.
+7. En Discord ejecuta /stream lista: la cuenta @djcr0ss_ debe seguir allí.
+8. Espera 90 segundos si acabas de revisar y ejecuta /stream revisar.
+9. Si aparece otro error, envía solo el texto del nuevo error de TikTok.
+   Los logs del intento manual se consultan en discord-interactions y
+   los automáticos en check-lives. Nunca difundas secretos en logs.
+
+VERIFICACIÓN Y LÍMITES
+- Se han ejecutado pruebas de lógica automatizadas en local.
+- No se han realizado peticiones reales a TikTok desde Netlify.
+- Corregir la inicialización NO garantiza detectar LIVE: TikTok puede
+  bloquear solicitudes, exigir verificaciones o cambiar su respuesta.
+- Si TikTok devuelve error, se informa como estado DESCONOCIDO, no OFFLINE.
+- Las cuentas guardadas en Netlify Blobs permanecen al actualizar el mismo
+  proyecto, conservando la configuración de almacenamiento.
+
+SEGURIDAD
+No publiques DISCORD_BOT_TOKEN, DISCORD_WEBHOOK_URL, TEST_SECRET,
+TWITCH_CLIENT_SECRET, KICK_CLIENT_SECRET ni otras credenciales.
