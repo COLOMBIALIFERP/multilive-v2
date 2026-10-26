@@ -1,3 +1,7 @@
+# MultiLIVE v2.0.6
+
+Corrección general de alertas automáticas para **TikTok, Starvios, Kick y Twitch**. La deduplicación delimita la sesión por el último estado `offline` confirmado, incluso si una plataforma reutiliza un ID de transmisión. Los detectores siguen exigiendo un estado `live` confirmado antes de notificar; los errores o estados desconocidos no se interpretan como offline. La detección real depende de la respuesta disponible de cada plataforma.
+
 ## Novedad v2.0.4 — Starvios para todos los miembros de ESTE servidor
 
 - `/stream agregar plataforma:starvios usuario:canal`: cualquier miembro del servidor puede agregar un streamer de Starvios.

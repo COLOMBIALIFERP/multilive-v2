@@ -62,3 +62,27 @@ test('migra estado antiguo de Starvios con stream.id persistente y permite una a
   assert.equal((await processPresence(store, starvios, x => sent.push(x))).action, 'already-announced');
   assert.equal(sent.length, 1);
 });
+
+
+test('all platforms send a new alert when a reused session ID follows confirmed offline', async () => {
+  for (const platform of ['tiktok', 'twitch', 'kick', 'starvios']) {
+    const store = makeStore(), sent = [];
+    const notify = async x => sent.push(x);
+    const liveItem = { platform, user: 'channel', live: true, sessionId: 'reused-id', url: 'https://example.test/live' };
+    await processPresence(store, liveItem, notify);
+    assert.equal((await processPresence(store, liveItem, notify)).action, 'already-announced', `${platform} duplicate while still live`);
+    await processPresence(store, { ...liveItem, live: false }, notify);
+    assert.equal((await processPresence(store, liveItem, notify)).action, 'sent', `${platform} new session after offline`);
+    assert.equal(sent.length, 2, `${platform} should notify twice across two sessions`);
+  }
+});
+
+test('platform state errors do not reset session or trigger a false alert', async () => {
+  const store = makeStore(), sent = [];
+  const notify = async x => sent.push(x);
+  const live = { platform: 'tiktok', user: 'maria', live: true, sessionId: '', url: 'https://tiktok.com/@maria/live' };
+  assert.equal((await processPresence(store, live, notify)).action, 'sent');
+  assert.equal((await processPresence(store, { ...live, live: undefined, error: 'HTTP 403' }, notify)).action, 'error');
+  assert.equal((await processPresence(store, live, notify)).action, 'already-announced');
+  assert.equal(sent.length, 1);
+});

@@ -1,0 +1,38 @@
+MultiLIVE v2.0.6 — CORRECCIÓN GENERAL DE ALERTAS
+================================================
+
+ALCANCE
+- El cambio es general para TikTok, Starvios, Kick y Twitch.
+- No cambia la URL de webhook ni la configuración de Discord.
+- Un canal solo genera una notificación cuando su detector confirma live=true.
+- Un error o estado desconocido no se guarda como offline.
+
+CORRECCIÓN
+La clave de deduplicación incorpora el último período offline confirmado. Así,
+si una plataforma reutiliza el mismo identificador de transmisión, una emisión
+nueva después de un estado offline confirmado puede generar otra alerta. Se
+mantiene una sola alerta por sesión y se conserva el reintento si Discord falla.
+Se incluye migración de la clave guardada por versiones anteriores.
+
+CÓMO APLICARLO EN EL REPOSITORIO CONECTADO A NETLIFY
+1. Descomprime el ZIP.
+2. En la raíz del repositorio existente, reemplaza los archivos respetando las
+   rutas incluidas. En el parche reemplaza lib/state.mjs y tests/state.test.mjs.
+3. Si usas el proyecto completo, actualiza el contenido de multilive-v2-main
+   en la raíz del repositorio; no introduzcas una carpeta duplicada anidada.
+4. Haz commit a la rama conectada a Netlify.
+5. Espera a que el deploy muestre Published.
+6. No cambies DISCORD_WEBHOOK_URL, tokens ni TEST_SECRET por este cambio.
+7. Revisa Logs > Functions > check-lives durante una transmisión de prueba.
+   Busca action=sent o el error concreto de la plataforma.
+
+LIMITACIONES IMPORTANTES
+- La función programada revisa los canales cada 10 minutos. No es instantánea.
+- La corrección de estado/deduplicación no convierte un detector que responde
+  offline en live. Si la API de una plataforma no confirma el directo, hay que
+  revisar el resultado de ese detector por separado.
+- Kick necesita KICK_CLIENT_ID y KICK_CLIENT_SECRET.
+- Twitch necesita TWITCH_CLIENT_ID y TWITCH_CLIENT_SECRET.
+- TikTok usa un conector no oficial y puede verse afectado por cambios o bloqueos
+  de TikTok. Starvios usa un endpoint web que no se presenta como API oficial.
+- Pruebas automatizadas locales no equivalen a una prueba real en producción.
