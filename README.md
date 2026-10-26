@@ -117,3 +117,12 @@ Netlify → Logs → Functions → `discord-interactions`, `check-lives`, `insta
 - `netlify/functions/check-lives.mjs`: ejecución programada, cada diez minutos
 
 Pruebas locales de lógica: `npm test` (sin conectar con cuentas reales).
+
+
+## v2.0.7 — polling automático cada minuto
+
+- `check-lives` se programa en `netlify.toml` con `* * * * *` (cada minuto, UTC).
+- `check-lives` y `/stream revisar` usan la misma rutina `performChecks`; las alertas siguen sujetas a que el detector de la plataforma confirme `live=true`.
+- Los logs identifican inicio/fin, estado detectado, acción (`sent`, `already-announced`, `offline-unchanged`, `error`) y totales.
+- Si el log muestra `OFFLINE` durante una transmisión que está realmente activa, el problema está en el detector específico de esa plataforma; el cambio de frecuencia por sí solo no convierte un falso `offline` en `LIVE`.
+- Kick requiere `KICK_CLIENT_ID` y `KICK_CLIENT_SECRET`; sin esas variables no se puede consultar Kick.

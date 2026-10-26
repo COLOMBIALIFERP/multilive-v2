@@ -1,6 +1,6 @@
 {
   "name": "multilive-discord-netlify",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "private": true,
   "type": "module",
   "description": "Netlify + Discord slash commands para gestionar cuentas y avisos LIVE",

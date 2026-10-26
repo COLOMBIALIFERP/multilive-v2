@@ -6,5 +6,5 @@
   node_bundler = "esbuild"
 
 [functions."check-lives"]
-  # Cada 10 minutos (UTC), con límites de las funciones programadas de Netlify.
-  schedule = "*/10 * * * *"
+  # Comprueba cada minuto (UTC) para reducir la demora máxima de detección.
+  schedule = "* * * * *"

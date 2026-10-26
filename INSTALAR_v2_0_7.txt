@@ -1,0 +1,18 @@
+MultiLIVE v2.0.7 — comprobación automática cada minuto
+
+CAMBIOS
+1. check-lives queda programada cada minuto (UTC).
+2. Los registros muestran LIVE/OFFLINE/UNKNOWN, acción de notificación y errores.
+3. Se mantiene el webhook y la deduplicación para no enviar una alerta por cada minuto de una emisión activa.
+
+INSTALACIÓN EN NETLIFY
+1. Haz copia/commit de tu versión actual en GitHub antes de actualizar.
+2. Reemplaza los archivos del proyecto por los de este paquete o, como mínimo, reemplaza netlify.toml, netlify/functions/check-lives.mjs y package.json.
+3. Haz commit en la rama enlazada a Netlify y espera a que el deploy de producción figure como Published.
+4. En Netlify > Functions > check-lives, comprueba que la programación y la siguiente ejecución estén visibles.
+5. En los logs, cada ejecución debe mostrar “[MultiLIVE] check-lives START” y “END”. Para una transmisión activa, busca estado=LIVE y acción=sent (solo al inicio de esa emisión).
+
+IMPORTANTE
+La comprobación cada minuto reduce la demora, pero no arregla una plataforma cuyo detector responde OFFLINE mientras transmite. Si aparece OFFLINE durante una transmisión confirmada, se debe corregir el adaptador de esa plataforma.
+Kick no funcionará hasta configurar KICK_CLIENT_ID y KICK_CLIENT_SECRET.
+No publiques ni compartas claves, tokens ni la URL privada del webhook.
