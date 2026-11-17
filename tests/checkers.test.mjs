@@ -37,6 +37,22 @@ test('TikTok aislado: no abre websocket, detecta booleano', async () => {
 });
 
 
+test('TikTok: obtiene título y portada del LIVE para la tarjeta de Discord', async () => {
+  const r = await checkTikTok(['streamer'], {}, async () => ({
+    fetchIsLive: async () => true,
+    fetchRoomInfo: async () => ({
+      data: {
+        room: { title: 'Convoy en carretera', cover: { url_list: ['https://cdn.example/cover.jpg'] } },
+        owner: { avatar_thumb: { url_list: ['https://cdn.example/avatar.jpg'] } }
+      }
+    })
+  }));
+  assert.equal(r[0].live, true);
+  assert.equal(r[0].title, 'Convoy en carretera');
+  assert.equal(r[0].thumbnailUrl, 'https://cdn.example/cover.jpg');
+  assert.equal(r[0].avatarUrl, 'https://cdn.example/avatar.jpg');
+});
+
 test('TikTok: pasa opciones explícitas a tiktok-live-connector 2.5.0', async () => {
   const constructorCalls = [];
   const r = await checkTikTok(['streamer'], {}, async (user, options) => {

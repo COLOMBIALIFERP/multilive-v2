@@ -25,7 +25,7 @@ Versión de Netlify para Colombia Life RP. **No depende de un PC encendido**. Ma
 
 - Las cuentas vigiladas se agregan y eliminan en **Discord**, no en variables de entorno.
 - Netlify Blobs guarda las cuentas en un almacén del proyecto que **sobrevive a los despliegues**.
-- Los directos se revisan automáticamente cada **10 minutos**; `/stream revisar` solicita una comprobación inmediata.
+- Los directos se revisan automáticamente cada **minuto**. TikTok admite registros sin límite artificial del proyecto; para no exceder el tiempo de ejecución de Netlify, el sistema comprueba hasta seis cuentas TikTok por ronda y rota el grupo en cada ejecución. `/stream revisar` ejecuta la siguiente ronda.
 - Los avisos reales siguen entrando al canal mediante `DISCORD_WEBHOOK_URL`, que ya probaste.
 - Los comandos de altas/bajas en Starvios están disponibles para **todos los miembros** (máximo 2 cuentas propias por miembro, 6 Starvios en total). Las altas/bajas de otras plataformas y `/stream revisar` requieren **Administrator**; `/stream lista` y `/stream directos` están disponibles a los demás miembros del servidor, mostrando un resultado privado (efímero) al solicitante.
 - Las notificaciones **no son instantáneas** y los directos breves entre intervalos pueden perderse.
@@ -50,6 +50,7 @@ Actualiza los archivos del repositorio conectado a tu proyecto Netlify. Respeta 
    | `DISCORD_PUBLIC_KEY` | Public Key de Discord |
    | `DISCORD_GUILD_ID` | ID numérico de tu servidor |
    | `DISCORD_BOT_TOKEN` | Token del bot (marcar como secreto) |
+   | `DISCORD_NOTIFY_ROLE_ID` | (Opcional) ID numérico del rol que se mencionará en las alertas LIVE |
 
 6. En el portal Discord → tu aplicación → **General Information** (sección **Interactions Endpoint URL**), introduce la URL de la función:
 
@@ -76,9 +77,14 @@ Escribe `/stream` en un canal y elige un subcomando:
 
 **La primera vez**, si necesitas que se lance la comprobación sin esperar al ciclo automático, ejecuta `/stream revisar`. Si una plataforma necesita credenciales que faltan, se reflejará como error, no como offline. Si un detector falla, el resultado incluye el motivo abreviado; también queda registrado en los logs de la función que hizo la comprobación. `/stream directos` no verifica al momento; para verificar al momento se usa `/stream revisar`.
 
-### Límite de esta versión
+### Capacidad y rotación de cuentas
 
-Hasta **6 cuentas por plataforma**. Así se preserva el funcionamiento dentro de los límites de ejecución de Netlify y del proyecto original. El almacén usa **Netlify Blobs**, que persiste entre despliegues. No hacen falta variables `TWITCH_USERS`, `KICK_USERS`, `TIKTOK_USERS`, `STARVIOS_USERS`: **esta versión no las lee**. Si las tenías configuradas antes, vuelve a añadir esos usuarios en Discord y, tras comprobar que están en `/stream lista`, puedes borrar las variables antiguas.
+- **TikTok:** sin límite fijo de cuentas registradas en el proyecto. Netlify Blobs almacena las cuentas y la función programada comprueba hasta **6 cuentas TikTok por ejecución**, rotando automáticamente el grupo en cada minuto. Si registras más de seis, todas quedan en seguimiento; el tiempo entre revisiones de una cuenta aumenta según el total registrado.
+- **Twitch, Kick y Starvios:** conservan el máximo de **6 cuentas por plataforma** en esta versión.
+- **Starvios:** además mantiene el máximo de 2 cuentas propias por miembro no administrador.
+- “Sin límite” significa que no se rechaza el alta por un tope local de TikTok; siguen aplicando las cuotas de TikTok, la biblioteca no oficial, el tiempo de ejecución y el almacenamiento de Netlify. No se puede garantizar una cantidad literalmente infinita ni detección instantánea.
+- El cursor de rotación se guarda en Netlify Blobs, por lo que continúa funcionando después de un nuevo despliegue.
+
 
 ### Claves de Twitch y Kick (detectores oficiales)
 
@@ -119,10 +125,20 @@ Netlify → Logs → Functions → `discord-interactions`, `check-lives`, `insta
 Pruebas locales de lógica: `npm test` (sin conectar con cuentas reales).
 
 
+## v2.0.8 — TikTok sin límite local y alertas NotifyMe
+
+- Se elimina el tope local de cuentas TikTok. Las cuentas se guardan en Netlify Blobs.
+- Para respetar el tiempo de ejecución, se revisan hasta seis cuentas por plataforma y por minuto con rotación persistente.
+- Las alertas adoptan un embed tipo NotifyMe APP con nombre, título, portada y avatar cuando TikTok los entrega, además de botones de enlace.
+- `DISCORD_NOTIFY_ROLE_ID` es opcional y permite mencionar solo el rol configurado.
+- La portada y el avatar son opcionales: si TikTok no devuelve esos datos, el aviso mantiene el enlace al directo.
+
 ## v2.0.7 — polling automático cada minuto
 
 - `check-lives` se programa en `netlify.toml` con `* * * * *` (cada minuto, UTC).
 - `check-lives` y `/stream revisar` usan la misma rutina `performChecks`; las alertas siguen sujetas a que el detector de la plataforma confirme `live=true`.
+- TikTok se registra sin tope fijo; `performChecks` recorre hasta seis cuentas por minuto mediante un cursor persistente por plataforma para evitar exceder el tiempo de Netlify.
+- Las alertas de Discord usan el formato NotifyMe APP, con título de LIVE, portada/avatar si TikTok los entrega, botones de enlace y mención opcional configurada con `DISCORD_NOTIFY_ROLE_ID`.
 - Los logs identifican inicio/fin, estado detectado, acción (`sent`, `already-announced`, `offline-unchanged`, `error`) y totales.
 - Si el log muestra `OFFLINE` durante una transmisión que está realmente activa, el problema está en el detector específico de esa plataforma; el cambio de frecuencia por sí solo no convierte un falso `offline` en `LIVE`.
 - Kick requiere `KICK_CLIENT_ID` y `KICK_CLIENT_SECRET`; sin esas variables no se puede consultar Kick.

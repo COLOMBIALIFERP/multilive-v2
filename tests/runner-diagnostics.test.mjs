@@ -41,3 +41,22 @@ test('una comprobación de TikTok fallida registra causa y no la marca offline',
     console.warn = original;
   }
 });
+
+test('TikTok sin límite: rota seis cuentas por ejecución para mantener la función dentro del tiempo', async () => {
+  const s = store();
+  for (let i = 0; i < 14; i++) await addWatched(s, 'tiktok', `canal${i}`);
+  const batches = [];
+  for (let run = 0; run < 3; run++) {
+    const result = await performChecks(s, {}, {
+      tiktok: async users => {
+        batches.push([...users]);
+        return users.map(user => ({ platform: 'tiktok', user, live: false }));
+      }
+    });
+    assert.equal(result.length, 6);
+  }
+  assert.equal(new Set(batches.flat()).size, 14);
+  assert.equal(batches[0].length, 6);
+  assert.equal(batches[1].length, 6);
+  assert.equal(batches[2].length, 6);
+});

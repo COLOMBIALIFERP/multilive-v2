@@ -16,3 +16,19 @@ test('solo envía a webhook de Discord con POST', async () => {
   });
   assert.equal(called, true);
 });
+
+test('alerta estilo NotifyMe incluye vista previa, mención opcional y botones', () => {
+  const p = discordPayload({
+    platform: 'tiktok', user: 'creador', title: 'Convoy en carretera',
+    url: 'https://www.tiktok.com/@creador/live',
+    thumbnailUrl: 'https://cdn.example/cover.jpg',
+    avatarUrl: 'https://cdn.example/avatar.jpg',
+    notifyRoleId: '123456789012345678'
+  });
+  assert.equal(p.username, 'NotifyMe APP');
+  assert.deepEqual(p.allowed_mentions.roles, ['123456789012345678']);
+  assert.equal(p.embeds[0].image.url, 'https://cdn.example/cover.jpg');
+  assert.equal(p.embeds[0].author.icon_url, 'https://cdn.example/avatar.jpg');
+  assert.equal(p.components[0].components[0].label, 'Watch Stream');
+  assert.match(p.content, /<@&123456789012345678>/);
+});

@@ -39,10 +39,12 @@ test('cuentas persisten en blobs separadas, sin duplicados y se pueden eliminar'
   assert.deepEqual((await listWatched(s)).kick, ['uno']);
 });
 
-test('respeta límite 6 cuentas por plataforma', async () => {
+test('TikTok no tiene límite artificial de cuentas; otras plataformas conservan su límite', async () => {
   const s = store();
-  for(let x=0;x<MAX_USERS_PER_PLATFORM;x++) await addWatched(s,'twitch',`user${x}`);
-  await assert.rejects(()=>addWatched(s,'twitch','extra'), /Máximo/);
+  for (let x = 0; x < 18; x++) await addWatched(s, 'tiktok', `creator${x}`);
+  assert.equal((await listWatched(s)).tiktok.length, 18);
+  for (let x = 0; x < MAX_USERS_PER_PLATFORM; x++) await addWatched(s, 'twitch', `user${x}`);
+  await assert.rejects(() => addWatched(s, 'twitch', 'extra'), /Máximo/);
 });
 
 test('solo admins pueden agregar o eliminar, guild distinta no autorizada', async () => {
